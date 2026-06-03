@@ -45,7 +45,6 @@ def main():
         filing['priority_score'] = score_filing(filing)
 
         if not should_alert(filing, min_score=1):
-            new_ids.add(filing['id'])
             continue
 
         try:
