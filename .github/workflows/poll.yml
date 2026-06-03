@@ -1,0 +1,52 @@
+name: Stock Alert Poller v3
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'     # polling — every 5 min
+    - cron: '30 15 * * *'     # digest  — 3:30 PM UTC = 9 PM IST
+  workflow_dispatch:
+
+jobs:
+
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/5 * * * *'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Run poller
+        env:
+          TELEGRAM_BOT_TOKEN:          ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_GROUP_ID:           ${{ secrets.TELEGRAM_GROUP_ID }}
+          TELEGRAM_ALERTS_THREAD_ID:   ${{ secrets.TELEGRAM_ALERTS_THREAD_ID }}
+          TELEGRAM_DIGEST_THREAD_ID:   ${{ secrets.TELEGRAM_DIGEST_THREAD_ID }}
+          TELEGRAM_HEARTBEAT_THREAD_ID:${{ secrets.TELEGRAM_HEARTBEAT_THREAD_ID }}
+          GEMINI_API_KEY:              ${{ secrets.GEMINI_API_KEY }}
+          GIST_ID:                     ${{ secrets.GIST_ID }}
+          GH_PAT:                      ${{ secrets.GH_PAT }}
+        run: python main.py
+
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    if: github.event.schedule == '30 15 * * *'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Send daily digest
+        env:
+          TELEGRAM_BOT_TOKEN:          ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_GROUP_ID:           ${{ secrets.TELEGRAM_GROUP_ID }}
+          TELEGRAM_DIGEST_THREAD_ID:   ${{ secrets.TELEGRAM_DIGEST_THREAD_ID }}
+          TELEGRAM_HEARTBEAT_THREAD_ID:${{ secrets.TELEGRAM_HEARTBEAT_THREAD_ID }}
+          TELEGRAM_ALERTS_THREAD_ID:   ${{ secrets.TELEGRAM_ALERTS_THREAD_ID }}
+          GIST_ID:                     ${{ secrets.GIST_ID }}
+          GH_PAT:                      ${{ secrets.GH_PAT }}
+        run: python daily_digest.py
