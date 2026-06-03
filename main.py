@@ -36,7 +36,7 @@ def main():
     bse_filings = poll_bse(bse_codes)
     print(f'[MAIN] Fetched NSE:{len(nse_filings)} BSE:{len(bse_filings)}')
 
-    new_filings = fuzzy_deduplicate(nse_filings, bse_filings, seen)
+    new_filings = fuzzy_deduplicate(bse_filings, nse_filings, seen)
     print(f'[MAIN] New after dedup: {len(new_filings)}')
 
     new_ids = set()
